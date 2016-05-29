@@ -6,6 +6,7 @@ import (
     "strings"
 )
 
+
 func guessCaster(cellType reflect.Type) ((func (reflect.Value) string), error) {
     switch cellType.Kind() {
         case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32,
@@ -46,6 +47,7 @@ func guessCaster(cellType reflect.Type) ((func (reflect.Value) string), error) {
     }, nil
 }
 
+
 func getRowType(table interface{}) (reflect.Type, error) {
     tableType := reflect.TypeOf(table)
     if reflect.Slice == tableType.Kind() {
@@ -79,6 +81,23 @@ func fetchColumn(rowType reflect.Type, table reflect.Value, len int, index int) 
     return output, nil
 }
 
+
+func alignColumns(columns [][]string) {
+    for _, col := range columns {
+        colLength := 0
+        for _, cell := range col {
+            if len(cell) > colLength {
+                colLength = len(cell)
+            }
+        }
+
+        for i := 0; i < len(col); i++ {
+            col[i] = fmt.Sprintf("%[1]*[2]s", colLength, col[i])
+        }
+    }
+}
+
+
 func drawTable(columns [][]string) string {
     var output []string
 
@@ -110,6 +129,7 @@ func Tabulate(table interface{}) (string, error) {
 
         columns = append(columns, rows)
     }
+    alignColumns(columns)
 
     return drawTable(columns), nil
 }
