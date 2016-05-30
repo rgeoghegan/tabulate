@@ -82,46 +82,87 @@ func fetchColumn(rowType reflect.Type, table reflect.Value, len int, index int) 
 }
 
 
-func alignColumns(columns [][]string) {
-    for _, col := range columns {
+type table [][]string
+
+func (t table) columnWidths() []int {
+    var colWidths []int
+    for _, col := range t {
         colLength := 0
         for _, cell := range col {
             if len(cell) > colLength {
                 colLength = len(cell)
             }
         }
+        colWidths = append(colWidths, colLength)
+    }
+    return colWidths
+}
 
+
+func (t table) align(widths []int) {
+    for colI, col := range t {
         for i := 0; i < len(col); i++ {
-            col[i] = fmt.Sprintf("%[1]*[2]s", colLength, col[i])
+            col[i] = fmt.Sprintf("%[1]*[2]s", widths[colI], col[i])
         }
     }
 }
 
-
-func drawTable(columns [][]string) string {
+func (t table) draw(format TableFormatterInterface) string {
     var output []string
 
-    for rowI := range columns[0] {
+    columnWidths := t.columnWidths()
+    t.align(columnWidths)
+    format.RegisterWidths(columnWidths)
+
+    var row string
+    var add bool
+
+    for rowI := range t[0] {
         var line []string
-        for _, col := range columns {
+        for _, col := range t {
             line = append(line, col[rowI])
         }
-        output = append(output, strings.Join(line, " | "))
+
+        if rowI == 0 {
+            row, add = format.AboveTable()
+            if add {
+                output = append(output, row)
+            }
+        }
+
+        output = append(
+            output,
+            format.LinePrefix() +
+            strings.Join(line, format.Seperator()) +
+            format.LinePostfix(),
+        )
+
+        if rowI == 0 {
+            row, add = format.BelowHeader()
+            if add {
+                output = append(output, row)
+            }
+        }
+    }
+
+    row, add = format.BelowTable()
+    if (add) {
+        output = append(output, row)
     }
 
     return strings.Join(output, "\n")
 }
 
 
-func Tabulate(table interface{}) (string, error) {
-    rowType, err := getRowType(table)
+func Tabulate(data interface{}, format TableFormatterInterface) (string, error) {
+    rowType, err := getRowType(data)
     if err != nil {
         return "", err
     }
 
-    tableV := reflect.ValueOf(table)
+    tableV := reflect.ValueOf(data)
     tableLength := tableV.Len()
-    var columns [][]string
+    var columns table
 
     for col := 0; col < rowType.NumField(); col++ {
         rows, err := fetchColumn(rowType, tableV, tableLength, col)
@@ -129,7 +170,6 @@ func Tabulate(table interface{}) (string, error) {
 
         columns = append(columns, rows)
     }
-    alignColumns(columns)
 
-    return drawTable(columns), nil
+    return columns.draw(format), nil
 }

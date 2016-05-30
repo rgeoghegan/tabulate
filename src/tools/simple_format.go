@@ -16,7 +16,7 @@ func main() {
     blahs = append(blahs, &Blah{"apple", 15})
     blahs = append(blahs, &Blah{"pommegranit", 1})
 
-    table, err := tabulate.Tabulate(blahs)
+    table, err := tabulate.Tabulate(blahs, tabulate.HeaderFormat)
     if err != nil {panic(err)}
 
     fmt.Println(table)
