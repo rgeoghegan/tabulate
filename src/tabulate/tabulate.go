@@ -7,47 +7,6 @@ import (
 )
 
 
-func guessCaster(cellType reflect.Type) ((func (reflect.Value) string), error) {
-    switch cellType.Kind() {
-        case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32,
-                reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16,
-                reflect.Uint32, reflect.Uint64:
-            return func (integer reflect.Value) string {
-                return fmt.Sprintf("%d", integer.Int())
-            }, nil
-
-        case reflect.Float32, reflect.Float64:
-            return func (floating reflect.Value) string {
-                return fmt.Sprintf("%f", floating.Float())
-            }, nil
-
-        case reflect.Bool:
-            return func (boolean reflect.Value) string {
-                if boolean.Bool() {
-                    return "true"
-                }
-                return "false"
-            }, nil
-
-        case reflect.String:
-            return func (str reflect.Value) string {
-                return str.String()
-            }, nil
-    }
-
-    _, found := cellType.MethodByName("String")
-    if ! found {
-        return nil, fmt.Errorf("Column must either contain an int, a float, a bool, a string or something implementing the fmt.Stringer interface.")
-    }
-
-    return func (value reflect.Value) string {
-        toString := value.MethodByName("String")
-        res := toString.Call(nil)
-        return res[0].String()
-    }, nil
-}
-
-
 func getRowType(table interface{}) (reflect.Type, error) {
     tableType := reflect.TypeOf(table)
     if reflect.Slice == tableType.Kind() {
@@ -115,7 +74,6 @@ func (t table) draw(format TableFormatterInterface) string {
     format.RegisterWidths(columnWidths)
 
     var row string
-    var add bool
 
     for rowI := range t[0] {
         var line []string
@@ -124,8 +82,8 @@ func (t table) draw(format TableFormatterInterface) string {
         }
 
         if rowI == 0 {
-            row, add = format.AboveTable()
-            if add {
+            row = format.AboveTable()
+            if len(row) > 0 {
                 output = append(output, row)
             }
         }
@@ -133,20 +91,26 @@ func (t table) draw(format TableFormatterInterface) string {
         output = append(
             output,
             format.LinePrefix() +
-            strings.Join(line, format.Seperator()) +
+            strings.Join(line, format.Spacer()) +
             format.LinePostfix(),
         )
 
-        if rowI == 0 {
-            row, add = format.BelowHeader()
-            if add {
-                output = append(output, row)
-            }
+        switch {
+        case rowI == 0:
+            row = format.BelowHeader()
+        case rowI == len(t[0]) - 1:
+            row = ""
+        case true:
+            row = format.BetweenRow(rowI)
+        }
+    
+        if len(row) > 0 {
+            output = append(output, row)
         }
     }
 
-    row, add = format.BelowTable()
-    if (add) {
+    row = format.BelowTable()
+    if len(row) > 0 {
         output = append(output, row)
     }
 
