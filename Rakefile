@@ -7,13 +7,8 @@ TEST_PACKAGES = FileList[LIBS.map{|n| "src/#{n}/**/*_test.go"}].map { |e|
 }
 
 TOOL_FILES = FileList["src/tools/*.go"]
-
-#CODE_FILES = FileList["src/*"]
-#	.map{ |e| e.pathmap("%n") } \
-#	.reject{|e| LIBS.include?(e)} \
-#	.reject{|e| e == "play"}
-#
-#my_packages = (LIBS.map{|n| "src/#{n}"} + SOLUTIONS)
+TOOL_NAME_TO_FILE = {}
+TOOL_FILES.each { |e| TOOL_NAME_TO_FILE[e.pathmap("%n")] = e}
 
 DEPS = []
 
@@ -25,8 +20,11 @@ end
 desc "Build all the executables"
 task :build => :deps
 
-desc "Run all the executables"
-task :run
+desc "Run specific tool"
+task :run, [:toolname] do |t, args|
+	tool = TOOL_NAME_TO_FILE[args[:toolname]]
+	go("run #{tool}")
+end
 
 desc "Start doc server on port 8080"
 task :doc do

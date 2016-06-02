@@ -158,9 +158,6 @@ func makeBarFormat(left rune, bar rune, realSpacer string, middle rune, right ru
     return &BarFormat{string(left), bar, spacer.String(), string(right)}
 }
 
-
-// Implemented Formats
-
 var NoFormat SpacerFormatting = ""
 var PlainFormat SpacerFormatting = " "
 var SimpleFormat *HeaderFormatting = &HeaderFormatting{" ", '-', nil}

@@ -30,7 +30,7 @@ func main() {
     blahs = append(blahs, &Blah{&Bloom{"Bobby", "Smith"}, -2, "San Fransisco", false, 124353.23333333})
     blahs = append(blahs, &Blah{&Bloom{"Jolene", "Lee"}, 234, "Guyene", true, 11.0000000000001})
 
-    table, err := tabulate.Tabulate(blahs, tabulate.SimpleFormat)
+    table, err := tabulate.Tabulate(blahs, tabulate.SimpleLayout())
     if err != nil {panic(err)}
 
     fmt.Println(table)

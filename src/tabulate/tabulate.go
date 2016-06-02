@@ -6,6 +6,17 @@ import (
     "strings"
 )
 
+const (
+    noHeaders int = iota
+    fromStruct
+)
+
+type Layout struct {
+    Format TableFormatterInterface
+    HideHeaders bool
+    CustomHeaders []string
+}
+
 
 func getRowType(table interface{}) (reflect.Type, error) {
     tableType := reflect.TypeOf(table)
@@ -24,11 +35,18 @@ func getRowType(table interface{}) (reflect.Type, error) {
 }
 
 
-func fetchColumn(rowType reflect.Type, table reflect.Value, len int, index int) ([]string, error) {
+func fetchColumn(rowType reflect.Type, table reflect.Value, len int,
+        customHeaders []string, index int) ([]string, error) {
     var output []string
+    var headerName string
     
     header := rowType.Field(index)
-    output = append(output, header.Name)
+    if customHeaders == nil {
+        headerName = header.Name
+    } else {
+        headerName = customHeaders[index]
+    }
+    output = append(output, headerName)
     caster, err := guessCaster(header.Type)
 
     if err != nil {return nil, err}
@@ -43,13 +61,16 @@ func fetchColumn(rowType reflect.Type, table reflect.Value, len int, index int) 
 
 type table [][]string
 
-func (t table) columnWidths() []int {
+func (t table) columnWidths(countHeaders bool) []int {
     var colWidths []int
+
     for _, col := range t {
         colLength := 0
-        for _, cell := range col {
-            if len(cell) > colLength {
-                colLength = len(cell)
+        for rowI, cell := range col {
+            if (countHeaders) || (rowI > 0) {
+                if len(cell) > colLength {
+                    colLength = len(cell)
+                }
             }
         }
         colWidths = append(colWidths, colLength)
@@ -58,67 +79,71 @@ func (t table) columnWidths() []int {
 }
 
 
-func (t table) align(widths []int) {
+func (t table) align(widths []int, showHeaders bool) {
     for colI, col := range t {
-        for i := 0; i < len(col); i++ {
+        start := 0
+        if ! showHeaders {
+            // Skip first row because it contains the headers
+            start = 1
+        }
+        for i := start; i < len(col); i++ {
             col[i] = fmt.Sprintf("%[1]*[2]s", widths[colI], col[i])
         }
     }
 }
 
-func (t table) draw(format TableFormatterInterface) string {
+func (t table) draw(format TableFormatterInterface, showHeaders bool) string {
     var output []string
 
-    columnWidths := t.columnWidths()
-    t.align(columnWidths)
+    columnWidths := t.columnWidths(showHeaders)
+    t.align(columnWidths, showHeaders)
     format.RegisterWidths(columnWidths)
 
-    var row string
-
-    for rowI := range t[0] {
-        var line []string
-        for _, col := range t {
-            line = append(line, col[rowI])
-        }
-
-        if rowI == 0 {
-            row = format.AboveTable()
-            if len(row) > 0 {
-                output = append(output, row)
-            }
-        }
-
-        output = append(
-            output,
-            format.LinePrefix() +
-            strings.Join(line, format.Spacer()) +
-            format.LinePostfix(),
-        )
-
-        switch {
-        case rowI == 0:
-            row = format.BelowHeader()
-        case rowI == len(t[0]) - 1:
-            row = ""
-        case true:
-            row = format.BetweenRow(rowI)
-        }
-    
+    appendRow := func (rows []string, row string) []string {
         if len(row) > 0 {
-            output = append(output, row)
+            return append(rows, row)
+        }
+        return rows
+    }
+
+    joinCols := func (rowI int) string {
+        var parts []string
+        for _, col := range t {
+            parts = append(parts, col[rowI])
+        }
+        return format.LinePrefix() +
+            strings.Join(parts, format.Spacer()) +
+            format.LinePostfix()
+    }
+
+    output = appendRow(output, format.AboveTable())
+    if showHeaders {
+        output = append(output, joinCols(0))
+        output = appendRow(output, format.BelowHeader())
+    }
+
+    for rowI := 1; rowI < len(t[0]); rowI++ {
+        output = appendRow(output, joinCols(rowI))
+
+        if rowI < len(t[0]) - 1 {
+            output = appendRow(output, format.BetweenRow(rowI))
         }
     }
+    output = appendRow(output, format.BelowTable())
 
-    row = format.BelowTable()
-    if len(row) > 0 {
-        output = append(output, row)
-    }
-
-    return strings.Join(output, "\n")
+    return strings.Join(output, "\n") + "\n"
 }
 
 
-func Tabulate(data interface{}, format TableFormatterInterface) (string, error) {
+// Implemented Layouts w/ Formats
+func NoFormatLayout() *Layout {return &Layout{Format: NoFormat}}
+func PlainLayout() *Layout {return &Layout{Format: PlainFormat}}
+func SimpleLayout() *Layout {return &Layout{Format: SimpleFormat}}
+func GridLayout() *Layout {return &Layout{Format: GridFormat}}
+func FancyGridLayout() *Layout {return &Layout{Format: FancyGridFormat}}
+
+
+func Tabulate(data interface{}, layout *Layout) (string, error) {
     rowType, err := getRowType(data)
     if err != nil {
         return "", err
@@ -129,11 +154,18 @@ func Tabulate(data interface{}, format TableFormatterInterface) (string, error) 
     var columns table
 
     for col := 0; col < rowType.NumField(); col++ {
-        rows, err := fetchColumn(rowType, tableV, tableLength, col)
+        rows, err := fetchColumn(
+            rowType, tableV, tableLength, layout.CustomHeaders, col,
+        )
         if err != nil {return "", fmt.Errorf("Error with col %d: %s", col, err)}
 
         columns = append(columns, rows)
     }
 
-    return columns.draw(format), nil
+    format := layout.Format
+    if format == nil {
+        format = SimpleFormat
+    }
+
+    return columns.draw(format, ! layout.HideHeaders), nil
 }

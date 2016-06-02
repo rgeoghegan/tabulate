@@ -13,31 +13,46 @@ type Blah struct {
 func main() {
     var blahs []*Blah
 
-    blahs = append(blahs, &Blah{"apple", 15})
+    blahs = append(blahs, &Blah{"Apple", 15})
     blahs = append(blahs, &Blah{"Orange", 1})
 
     fmt.Println("No Format:")
-    table, err := tabulate.Tabulate(blahs, tabulate.NoFormat)
+    layout := tabulate.NoFormatLayout()
+    table, err := tabulate.Tabulate(blahs, layout)
+    if err != nil {panic(err)}
+    fmt.Println(table)
+
+    fmt.Println("No Format, No Header:")
+    layout.HideHeaders = true
+    table, err = tabulate.Tabulate(blahs, layout)
     if err != nil {panic(err)}
     fmt.Println(table)
 
     fmt.Println("Plain Format:")
-    table, err = tabulate.Tabulate(blahs, tabulate.PlainFormat)
+    layout = tabulate.PlainLayout()
+    table, err = tabulate.Tabulate(blahs, layout)
     if err != nil {panic(err)}
     fmt.Println(table)
 
+    fmt.Println("Plain Format, No Header:")
+    layout.HideHeaders = true
+    table, err = tabulate.Tabulate(blahs, layout)
+    if err != nil {panic(err)}
+    fmt.Println(table)
+
+
     fmt.Println("Simple Format:")
-    table, err = tabulate.Tabulate(blahs, tabulate.SimpleFormat)
+    table, err = tabulate.Tabulate(blahs, tabulate.SimpleLayout())
     if err != nil {panic(err)}
     fmt.Println(table)
 
     fmt.Println("Grid Format:")
-    table, err = tabulate.Tabulate(blahs, tabulate.GridFormat)
+    table, err = tabulate.Tabulate(blahs, tabulate.GridLayout())
     if err != nil {panic(err)}
     fmt.Println(table)
 
     fmt.Println("Fancy Grid Format:")
-    table, err = tabulate.Tabulate(blahs, tabulate.FancyGridFormat)
+    table, err = tabulate.Tabulate(blahs, tabulate.FancyGridLayout())
     if err != nil {panic(err)}
     fmt.Println(table)
 
