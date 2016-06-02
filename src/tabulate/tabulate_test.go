@@ -174,12 +174,12 @@ func TestComplexFormat(t *testing.T) {
     if err != nil {panic(err)}
 
     expecting := (
-        "         Name Amount        Location  Done      SurfaceArea\n" +
-        "------------- ------ --------------- ----- ----------------\n" +
-        "    Roy Smith     15 Washington D.C.  true           0.3453\n" +
-        "Fred Flanders    100        Montreal false                1\n" +
-        "  Bobby Smith     -2   San Fransisco false  124353.23333333\n" +
-        "   Jolene Lee    234          Guyene  true 11.0000000000001\n")
+        "         Name Amount        Location  Done          SurfaceArea\n" +
+        "------------- ------ --------------- ----- --------------------\n" +
+        "    Roy Smith     15 Washington D.C.  true      0.3453         \n" +
+        "Fred Flanders    100        Montreal false      1              \n" +
+        "  Bobby Smith     -2   San Fransisco false 124353.23333333     \n" +
+        "   Jolene Lee    234          Guyene  true     11.0000000000001\n")
 
     if table != expecting {
         t.Fatalf("Expecting %q, got %q", expecting, table)

@@ -35,7 +35,7 @@ func getRowType(table interface{}) (reflect.Type, error) {
 }
 
 
-func fetchColumn(rowType reflect.Type, table reflect.Value, len int,
+func fetchColumn(rowType reflect.Type, table reflect.Value, colDepth int,
         customHeaders []string, index int) ([]string, error) {
     var output []string
     var headerName string
@@ -51,9 +51,12 @@ func fetchColumn(rowType reflect.Type, table reflect.Value, len int,
 
     if err != nil {return nil, err}
 
-    for i := 0; i < len; i++ {
+    for i := 0; i < colDepth; i++ {
         row := table.Index(i).Elem()
         output = append(output, caster(row.Field(index)))
+    }
+    if header.Type.Kind() == reflect.Float32 || header.Type.Kind() == reflect.Float64 {
+        alignFloats(output[1:len(output)] )
     }
     return output, nil
 }

@@ -4,6 +4,7 @@ import (
     "reflect"
     "strconv"
     "fmt"
+    "strings"
 )
 
 
@@ -59,4 +60,38 @@ func guessCaster(cellType reflect.Type) ((func (reflect.Value) string), error) {
     }
 
     return callString, nil
+}
+
+func alignFloats(floats []string) {
+    maxRight := 0
+
+    for _, number := range floats {
+        decimal := strings.Index(number, ".")
+        right := 0
+
+        if decimal > -1 {
+            // 123.45 -> 6 - 3 = 3, 3
+            // .1 -> 2 - 0 = 2, 0
+            right = len(number) - decimal - 1
+        } else {
+            // 12345 -> 0, 5
+            right = 0
+        }
+
+        if maxRight < right {maxRight = right}
+    }
+
+    for i, number := range floats {
+        decimal := strings.Index(number, ".")
+
+        // 12345 in 6 = 6 + 5 + 1 = 12
+        // 1.1 in 6 -> 6 + 1 + 1 = 8
+        // .1234 in 4 -> 4 + 0 + 1 = 5
+        // .1234 in 6 -> 6 + 0 + 1 = 7
+        if decimal == -1 {
+            decimal = len(number)
+        }
+
+        floats[i] = leftAlign(number, ' ', maxRight + decimal + 1)
+    }
 }
