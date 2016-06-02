@@ -14,7 +14,7 @@ const (
 type Layout struct {
     Format TableFormatterInterface
     HideHeaders bool
-    CustomHeaders []string
+    Headers []string
 }
 
 
@@ -158,7 +158,7 @@ func Tabulate(data interface{}, layout *Layout) (string, error) {
 
     for col := 0; col < rowType.NumField(); col++ {
         rows, err := fetchColumn(
-            rowType, tableV, tableLength, layout.CustomHeaders, col,
+            rowType, tableV, tableLength, layout.Headers, col,
         )
         if err != nil {return "", fmt.Errorf("Error with col %d: %s", col, err)}
 

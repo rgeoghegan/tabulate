@@ -90,7 +90,7 @@ func TestSimpleFormat(t *testing.T) {
 func TestSimpleFormatCustomHeaders(t *testing.T) {
     layout := &Layout{
         Format: SimpleFormat,
-        CustomHeaders: []string{"produce", "stuff"},
+        Headers: []string{"produce", "stuff"},
     }
     
     table, err := Tabulate(testData, layout)
