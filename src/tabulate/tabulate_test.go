@@ -1,6 +1,8 @@
 package tabulate
 
 import (
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -198,4 +200,24 @@ func TestComplexFormat(t *testing.T) {
 	if table != expecting {
 		t.Fatalf("Expecting %q, got %q", expecting, table)
 	}
+}
+
+func TestTabulateStringMatrix(t *testing.T) {
+	records := [][]string{
+		[]string{"here", "there"},
+		[]string{"1", "2"},
+	}
+
+	layout := SimpleLayout()
+	layout.Headers = []string{"a", "b"}
+
+	table, err := Tabulate(records, layout)
+	require.Nil(t, err)
+
+	expecting := ("" +
+		"   a" + "     b\n" + // 4 + 6
+		"----" + " -----\n" +
+		"here" + " there\n" +
+		"   1" + "     2\n")
+	assert.Equal(t, expecting, table)
 }

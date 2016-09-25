@@ -1,16 +1,12 @@
 LIBS = ["tabulate"]
 LIB_FILES = FileList[LIBS.map{|n| "src/#{n}/*.go"}]
 
-TEST_PACKAGES = FileList[LIBS.map{|n| "src/#{n}/**/*_test.go"}].map { |e|
-	name = e.pathmap("%n")
-	name[0,name.length - 5]
-}
-
 TOOL_FILES = FileList["src/tools/*.go"]
 TOOL_NAME_TO_FILE = {}
 TOOL_FILES.each { |e| TOOL_NAME_TO_FILE[e.pathmap("%n")] = e}
 
 DEPS = []
+DEV_DEPS = ["github.com/stretchr/testify"]
 
 def go(args)
 	ENV['GOPATH'] = Dir.pwd
@@ -34,15 +30,15 @@ end
 
 task :default => :build
 
-task :test do
-	TEST_PACKAGES.each do |n|
+task :test => :devdeps do
+    LIBS.each do |n|
 		go "test #{n}"
 	end
 end
 
-task :test_v do
-	TEST_PACKAGES.each do |n|
-		go "test -v #{n}"
+task :test_v => :devdeps do
+    LIBS.each do |n|
+		go "test #{n}"
 	end
 end
 
@@ -70,6 +66,13 @@ end
 desc "Install any third-party dependencies"
 task :deps do
 	DEPS.each do |n|
+		go("get #{n}")
+	end
+end
+
+desc "Install any third-party dev dependencies"
+task :devdeps do
+	DEV_DEPS.each do |n|
 		go("get #{n}")
 	end
 end

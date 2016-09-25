@@ -1,2 +1,9 @@
-more_complicated_format
-simple_format
+
+/src/play.go
+# Third party packages
+/src/github.com
+/pkg
+
+/more_complicated_format
+/simple_format
+/string_slice_format

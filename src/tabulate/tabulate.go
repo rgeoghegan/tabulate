@@ -20,20 +20,20 @@ type Layout struct {
 func getRowType(table interface{}) (reflect.Type, error) {
 	tableType := reflect.TypeOf(table)
 	if reflect.Slice == tableType.Kind() {
+		rowType := tableType.Elem()
+		if reflect.Ptr == rowType.Kind() {
+			rowType = rowType.Elem()
+		}
 
-		rowPtrType := tableType.Elem()
-		if reflect.Ptr == rowPtrType.Kind() {
-
-			rowType := rowPtrType.Elem()
-			if reflect.Struct == rowType.Kind() {
-				return rowType, nil
-			}
+		switch rowType.Kind() {
+		case reflect.Struct, reflect.Slice:
+			return rowType, nil
 		}
 	}
 	return nil, fmt.Errorf("Must pass in slice of struct pointers.")
 }
 
-func fetchColumn(rowType reflect.Type, table reflect.Value, colDepth int,
+func fetchStructColumn(rowType reflect.Type, table reflect.Value, colDepth int,
 	customHeaders []string, index int) ([]string, error) {
 	var output []string
 	var headerName string
@@ -57,6 +57,29 @@ func fetchColumn(rowType reflect.Type, table reflect.Value, colDepth int,
 	}
 	if header.Type.Kind() == reflect.Float32 ||
 		header.Type.Kind() == reflect.Float64 {
+		alignFloats(output[1:len(output)])
+	}
+	return output, nil
+}
+
+func fetchMatrixColumn(rowType reflect.Type, table reflect.Value, colDepth int,
+	customHeaders []string, index int) ([]string, error) {
+
+	var output []string
+
+	output = append(output, customHeaders[index])
+	cellType := rowType.Elem()
+	caster, err := guessCaster(cellType)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for i := 0; i < colDepth; i++ {
+		cell := table.Index(i).Index(index)
+		output = append(output, caster(cell))
+	}
+	if cellType.Kind() == reflect.Float32 || cellType.Kind() == reflect.Float64 {
 		alignFloats(output[1:len(output)])
 	}
 	return output, nil
@@ -136,6 +159,56 @@ func (t table) draw(format TableFormatterInterface, showHeaders bool) string {
 	return strings.Join(output, "\n") + "\n"
 }
 
+func buildTable(data interface{}, layout *Layout) (table, error) {
+	rowType, err := getRowType(data)
+	if err != nil {
+		panic(err)
+	}
+
+	tableV := reflect.ValueOf(data)
+	tableLength := tableV.Len()
+
+	var columns table
+	var isStruct bool
+	var colCount int
+
+	switch rowType.Kind() {
+	case reflect.Struct:
+		isStruct = true
+		colCount = rowType.NumField()
+	case reflect.Slice:
+		if layout.Headers == nil {
+			return nil, fmt.Errorf("Must provide headers in layout with slice of slices.")
+		}
+		isStruct = false
+		colCount = len(layout.Headers)
+	default:
+		return nil, fmt.Errorf("Inputted data must be a slice of slices or a slice of structs.")
+	}
+
+	for col := 0; col < colCount; col++ {
+		var rows []string
+		var err error
+
+		if isStruct {
+			rows, err = fetchStructColumn(
+				rowType, tableV, tableLength, layout.Headers, col,
+			)
+		} else {
+			rows, err = fetchMatrixColumn(
+				rowType, tableV, tableLength, layout.Headers, col,
+			)
+		}
+
+		if err != nil {
+			return nil, fmt.Errorf("Error with col %d: %s", col, err)
+		}
+		columns = append(columns, rows)
+	}
+
+	return columns, nil
+}
+
 // Implemented Layouts w/ Formats
 func NoFormatLayout() *Layout  { return &Layout{Format: NoFormat} }
 func PlainLayout() *Layout     { return &Layout{Format: PlainFormat} }
@@ -144,24 +217,9 @@ func GridLayout() *Layout      { return &Layout{Format: GridFormat} }
 func FancyGridLayout() *Layout { return &Layout{Format: FancyGridFormat} }
 
 func Tabulate(data interface{}, layout *Layout) (string, error) {
-	rowType, err := getRowType(data)
+	columns, err := buildTable(data, layout)
 	if err != nil {
 		return "", err
-	}
-
-	tableV := reflect.ValueOf(data)
-	tableLength := tableV.Len()
-	var columns table
-
-	for col := 0; col < rowType.NumField(); col++ {
-		rows, err := fetchColumn(
-			rowType, tableV, tableLength, layout.Headers, col,
-		)
-		if err != nil {
-			return "", fmt.Errorf("Error with col %d: %s", col, err)
-		}
-
-		columns = append(columns, rows)
 	}
 
 	format := layout.Format
