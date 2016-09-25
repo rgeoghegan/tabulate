@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"tabulate"
+	"github.com/rgeoghegan/tabulate"
 )
 
 func main() {
