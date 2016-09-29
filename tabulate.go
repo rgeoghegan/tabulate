@@ -21,7 +21,7 @@
 //             &Row{"Alpha", 1},
 //             &Row{"Bravo", 2},
 //         }
-//         asText, _ := tabulate.Tabulate(table, SimpleLayout())
+//         asText, _ := tabulate.Tabulate(table, &Layout{Format:tabulate.SimpleFormat})
 //         fmt.Print(asText)
 //     }
 //
@@ -31,8 +31,7 @@
 //         []string{"Alpha", "1"},
 //         []string{"Bravo", "2"},
 //     }
-//     layout := SimpleLayout()
-//     layout.Headers = []string{"name", "count"}
+//     layout := &Layout{Headers:[]string{"name", "count"}, Format:tabulate.SimpleFormat}
 //     asText, err := tabulate.Tabulate(table, layout)
 package tabulate
 
@@ -246,48 +245,6 @@ func buildTable(data interface{}, layout *Layout) (table, error) {
 	return columns, nil
 }
 
-// Implemented Layouts w/ Formats
-
-// NoFormatLayout has (you'll never guess) no formatting:
-//      nameamount
-//     Apple    15
-//    Orange     1
-func NoFormatLayout() *Layout { return &Layout{Format: noFormat} }
-
-// PlainLayout uses a space between colums:
-//      name amount
-//     Apple     15
-//    Orange      1
-func PlainLayout() *Layout { return &Layout{Format: plainFormat} }
-
-// SimpleLayout is very similar to PlainLayout except it has a bar under
-// the headers:
-//      name amount
-//    ------ ------
-//     Apple     15
-//    Orange      1
-func SimpleLayout() *Layout { return &Layout{Format: simpleFormat} }
-
-// GridLayout surrounds every cell with a grid:
-//    +--------+--------+
-//    |   name | amount |
-//    +========+========+
-//    |  Apple |     15 |
-//    +--------+--------+
-//    | Orange |      1 |
-//    +--------+--------+
-func GridLayout() *Layout { return &Layout{Format: gridFormat} }
-
-// FancyGridLayout uses unicode characters to fancy up the grid:
-//    ╒════════╤════════╕
-//    │   name │ amount │
-//    ╞════════╪════════╡
-//    │  Apple │     15 │
-//    ├────────┼────────┤
-//    │ Orange │      1 │
-//    ╘════════╧════════╛
-func FancyGridLayout() *Layout { return &Layout{Format: fancyGridFormat} }
-
 // Tabulate will tabulate the provided data with the given layout. If no
 // format is specified in the layout, it will use a simple format by default.
 //
@@ -296,7 +253,7 @@ func FancyGridLayout() *Layout { return &Layout{Format: fancyGridFormat} }
 // The data parameter must either be a slice of structs, and the table will
 // use the field names of the struct as column names. If provided a slice
 // of slices of strings, you will need to provide a list of Headers (mostly
-// so we can figure out how many columns to size for).
+// so it can figure out how many columns to size for).
 //
 func Tabulate(data interface{}, layout *Layout) (string, error) {
 	columns, err := buildTable(data, layout)
@@ -306,7 +263,7 @@ func Tabulate(data interface{}, layout *Layout) (string, error) {
 
 	format := layout.Format
 	if format == nil {
-		format = simpleFormat
+		format = SimpleFormat
 	}
 
 	return columns.draw(format, !layout.HideHeaders), nil

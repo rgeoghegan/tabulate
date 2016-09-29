@@ -175,11 +175,37 @@ func makebarFormat(left rune, bar rune, realSpacer string, middle rune,
 	return &barFormat{string(left), bar, spacer.String(), string(right)}
 }
 
-var noFormat spacerFormatting = ""
-var plainFormat spacerFormatting = " "
+// Implemented Formats
 
-var simpleFormat *headerFormatting = &headerFormatting{" ", '-', nil}
-var gridFormat *gridFormatting = newGridFormat(
+// NoFormat has (you'll never guess) no formatting:
+//      nameamount
+//     Apple    15
+//    Orange     1
+var NoFormat spacerFormatting = ""
+
+// PlainFormat uses a space between columns:
+//      name amount
+//     Apple     15
+//    Orange      1
+var PlainFormat spacerFormatting = " "
+
+// SimpleFormat is very similar to PlainLayout except it has a bar under
+// the headers:
+//      name amount
+//    ------ ------
+//     Apple     15
+//    Orange      1
+var SimpleFormat *headerFormatting = &headerFormatting{" ", '-', nil}
+
+// GridFormat surrounds every cell with a grid:
+//    +--------+--------+
+//    |   name | amount |
+//    +========+========+
+//    |  Apple |     15 |
+//    +--------+--------+
+//    | Orange |      1 |
+//    +--------+--------+
+var GridFormat *gridFormatting = newGridFormat(
 	"| ", " | ", " |",
 
 	&barFormat{"+", '-', "+", "+"},
@@ -187,7 +213,16 @@ var gridFormat *gridFormatting = newGridFormat(
 	&barFormat{"+", '-', "+", "+"},
 	&barFormat{"+", '-', "+", "+"},
 )
-var fancyGridFormat *gridFormatting = newGridFormat(
+
+// FancyGridLayout uses unicode characters to fancy up the grid:
+//    ╒════════╤════════╕
+//    │   name │ amount │
+//    ╞════════╪════════╡
+//    │  Apple │     15 │
+//    ├────────┼────────┤
+//    │ Orange │      1 │
+//    ╘════════╧════════╛
+var FancyGridFormat *gridFormatting = newGridFormat(
 	"\u2502 ", " \u2502 ", " \u2502",
 
 	&barFormat{"\u2552", '\u2550', "\u2564", "\u2555"},

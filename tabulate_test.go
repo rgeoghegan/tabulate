@@ -17,7 +17,7 @@ var testData = []*MyStruct{
 }
 
 func TestNoFormat(t *testing.T) {
-	layout := NoFormatLayout()
+	layout := &Layout{Format: NoFormat}
 	table, err := Tabulate(testData, layout)
 	if err != nil {
 		t.Fatal(err)
@@ -45,7 +45,7 @@ func TestNoFormat(t *testing.T) {
 }
 
 func TestPlainFormat(t *testing.T) {
-	layout := PlainLayout()
+	layout := &Layout{Format: PlainFormat}
 	table, err := Tabulate(testData, layout)
 	if err != nil {
 		t.Fatal(err)
@@ -87,7 +87,7 @@ func TestSimpleFormat(t *testing.T) {
 		t.Fatalf("Expecting %q, got %q", expecting, table)
 	}
 
-	table, err = Tabulate(testData, SimpleLayout())
+	table, err = Tabulate(testData, &Layout{Format: SimpleFormat})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -98,7 +98,7 @@ func TestSimpleFormat(t *testing.T) {
 
 func TestSimpleFormatCustomHeaders(t *testing.T) {
 	layout := &Layout{
-		Format:  simpleFormat,
+		Format:  SimpleFormat,
 		Headers: []string{"produce", "stuff"},
 	}
 
@@ -117,7 +117,7 @@ func TestSimpleFormatCustomHeaders(t *testing.T) {
 }
 
 func TestGridFormat(t *testing.T) {
-	table, err := Tabulate(testData, GridLayout())
+	table, err := Tabulate(testData, &Layout{Format: GridFormat})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -136,7 +136,7 @@ func TestGridFormat(t *testing.T) {
 }
 
 func TestFancyGridFormat(t *testing.T) {
-	table, err := Tabulate(testData, FancyGridLayout())
+	table, err := Tabulate(testData, &Layout{Format: FancyGridFormat})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -184,7 +184,7 @@ func TestComplexFormat(t *testing.T) {
 			11.0000000000001},
 	}
 
-	table, err := Tabulate(records, SimpleLayout())
+	table, err := Tabulate(records, &Layout{Format: SimpleFormat})
 	if err != nil {
 		panic(err)
 	}
@@ -208,7 +208,7 @@ func TestTabulateStringMatrix(t *testing.T) {
 		[]string{"1", "2"},
 	}
 
-	layout := SimpleLayout()
+	layout := &Layout{Format: SimpleFormat}
 	layout.Headers = []string{"a", "b"}
 
 	table, err := Tabulate(records, layout)
