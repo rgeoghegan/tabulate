@@ -4,137 +4,155 @@ import (
 	"bytes"
 )
 
+// TableFormatterInterface determines how a layout will format the table.
+// Create your own implementation if you need a custom format.
 type TableFormatterInterface interface {
+	// Passed in a list of column widths (including the header if shown)
+	// before drawing the table. Save the widths if you need (for example)
+	// to show a bar across a row.
 	RegisterWidths([]int)
+
+	// Spacer returns the string to join between the columns (but not
+	// before the first column or after the last one)
 	Spacer() string
+	// Line prefix is shown before the first column.
 	LinePrefix() string
+	// Line prefix is shown after the last column. Should not contain a return
+	// line.
 	LinePostfix() string
 
+	// This string appears at the top of the table. Should not contain a
+	// return line.
 	AboveTable() string
+	// This string appears in the table, right after the header. Should not
+	// contain a return line.
 	BelowHeader() string
+	// This string appears in the table, between every "normal" row. Should
+	// not contain a return line.
 	BetweenRow(index int) string
+	// This string appears at the bottom of the table. Should not contain a
+	// return line.
 	BelowTable() string
 }
 
-type SpacerFormatting string
+type spacerFormatting string
 
-func (s SpacerFormatting) Spacer() string {
+func (s spacerFormatting) Spacer() string {
 	return string(s)
 }
 
-func (s SpacerFormatting) RegisterWidths([]int)        {}
-func (s SpacerFormatting) LinePrefix() string          { return "" }
-func (s SpacerFormatting) LinePostfix() string         { return "" }
-func (s SpacerFormatting) AboveTable() string          { return "" }
-func (s SpacerFormatting) BelowHeader() string         { return "" }
-func (s SpacerFormatting) BetweenRow(index int) string { return "" }
-func (s SpacerFormatting) BelowTable() string          { return "" }
+func (s spacerFormatting) RegisterWidths([]int)        {}
+func (s spacerFormatting) LinePrefix() string          { return "" }
+func (s spacerFormatting) LinePostfix() string         { return "" }
+func (s spacerFormatting) AboveTable() string          { return "" }
+func (s spacerFormatting) BelowHeader() string         { return "" }
+func (s spacerFormatting) BetweenRow(index int) string { return "" }
+func (s spacerFormatting) BelowTable() string          { return "" }
 
-type BarFormat struct {
-	LeftCorner  string
-	Bar         rune
-	Spacer      string
-	RightCorner string
+type barFormat struct {
+	leftCorner  string
+	bar         rune
+	spacer      string
+	rightCorner string
 }
 
-func (b *BarFormat) Draw(colSizes []int) string {
+func (b *barFormat) draw(colSizes []int) string {
 	var bar bytes.Buffer
 	var err error
 
-	bar.WriteString(b.LeftCorner)
+	bar.WriteString(b.leftCorner)
 
 	for i, col := range colSizes {
 		if i > 0 {
-			_, err = bar.WriteString(b.Spacer)
+			_, err = bar.WriteString(b.spacer)
 			if err != nil {
 				panic(err)
 			}
 		}
 		for j := 0; j < col; j++ {
-			_, err = bar.WriteRune(b.Bar)
+			_, err = bar.WriteRune(b.bar)
 			if err != nil {
 				panic(err)
 			}
 		}
 	}
 
-	bar.WriteString(b.RightCorner)
+	bar.WriteString(b.rightCorner)
 
 	return bar.String()
 }
 
-type HeaderFormatting struct {
-	SpacerFormatting
-	BarSymbol rune
+type headerFormatting struct {
+	spacerFormatting
+	barSymbol rune
 	colSizes  []int
 }
 
-func (h *HeaderFormatting) RegisterWidths(colSizes []int) {
+func (h *headerFormatting) RegisterWidths(colSizes []int) {
 	h.colSizes = colSizes
 }
 
-func (h *HeaderFormatting) BelowHeader() string {
-	format := &BarFormat{"", h.BarSymbol, h.Spacer(), ""}
-	return format.Draw(h.colSizes)
+func (h *headerFormatting) BelowHeader() string {
+	format := &barFormat{"", h.barSymbol, h.Spacer(), ""}
+	return format.draw(h.colSizes)
 }
 
-type GridFormatting struct {
-	SpacerStr string
-	LeftEdge  string
-	RightEdge string
+type gridFormatting struct {
+	spacerStr string
+	leftEdge  string
+	rightEdge string
 
-	Top    *BarFormat
-	Header *BarFormat
-	Body   *BarFormat
-	Bottom *BarFormat
+	top    *barFormat
+	header *barFormat
+	body   *barFormat
+	bottom *barFormat
 
-	ColSizes []int
+	colSizes []int
 }
 
-func (g *GridFormatting) RegisterWidths(colSizes []int) {
-	g.ColSizes = colSizes
+func (g *gridFormatting) RegisterWidths(colSizes []int) {
+	g.colSizes = colSizes
 }
 
-func (g *GridFormatting) Spacer() string      { return g.SpacerStr }
-func (g *GridFormatting) LinePrefix() string  { return g.LeftEdge }
-func (g *GridFormatting) LinePostfix() string { return g.RightEdge }
+func (g *gridFormatting) Spacer() string      { return g.spacerStr }
+func (g *gridFormatting) LinePrefix() string  { return g.leftEdge }
+func (g *gridFormatting) LinePostfix() string { return g.rightEdge }
 
-func (g *GridFormatting) AboveTable() string {
-	return g.Top.Draw(g.ColSizes)
+func (g *gridFormatting) AboveTable() string {
+	return g.top.draw(g.colSizes)
 }
-func (g *GridFormatting) BelowHeader() string {
-	return g.Header.Draw(g.ColSizes)
+func (g *gridFormatting) BelowHeader() string {
+	return g.header.draw(g.colSizes)
 }
-func (g *GridFormatting) BetweenRow(index int) string {
-	return g.Body.Draw(g.ColSizes)
+func (g *gridFormatting) BetweenRow(index int) string {
+	return g.body.draw(g.colSizes)
 }
-func (g *GridFormatting) BelowTable() string {
-	return g.Bottom.Draw(g.ColSizes)
+func (g *gridFormatting) BelowTable() string {
+	return g.bottom.draw(g.colSizes)
 }
 
-func NewGridFormat(left string, spacer string, right string, top, header, body,
-	bottom *BarFormat) *GridFormatting {
-	bars := []*BarFormat{top, header, body, bottom}
+func newGridFormat(left, spacer, right string, top, header, body, bottom *barFormat) *gridFormatting {
+	bars := []*barFormat{top, header, body, bottom}
 
 	for _, bar := range bars {
-		bar.LeftCorner = leftAlign(
-			bar.LeftCorner, bar.Bar, utf8Len(left),
+		bar.leftCorner = leftAlign(
+			bar.leftCorner, bar.bar, utf8Len(left),
 		)
-		bar.RightCorner = rightAlign(
-			bar.RightCorner, bar.Bar, utf8Len(right),
+		bar.rightCorner = rightAlign(
+			bar.rightCorner, bar.bar, utf8Len(right),
 		)
-		bar.Spacer = center(bar.Spacer, bar.Bar, utf8Len(spacer))
+		bar.spacer = center(bar.spacer, bar.bar, utf8Len(spacer))
 	}
 
-	return &GridFormatting{
+	return &gridFormatting{
 		spacer, left, right,
 		top, header, body, bottom,
 		nil,
 	}
 }
 
-func makeBarFormat(left rune, bar rune, realSpacer string, middle rune,
-	right rune) *BarFormat {
+func makebarFormat(left rune, bar rune, realSpacer string, middle rune,
+	right rune) *barFormat {
 	var spacer bytes.Buffer
 	spacerLength := len(realSpacer)
 
@@ -154,25 +172,26 @@ func makeBarFormat(left rune, bar rune, realSpacer string, middle rune,
 		spacer.WriteRune(bar)
 	}
 
-	return &BarFormat{string(left), bar, spacer.String(), string(right)}
+	return &barFormat{string(left), bar, spacer.String(), string(right)}
 }
 
-var NoFormat SpacerFormatting = ""
-var PlainFormat SpacerFormatting = " "
-var SimpleFormat *HeaderFormatting = &HeaderFormatting{" ", '-', nil}
-var GridFormat *GridFormatting = NewGridFormat(
+var noFormat spacerFormatting = ""
+var plainFormat spacerFormatting = " "
+
+var simpleFormat *headerFormatting = &headerFormatting{" ", '-', nil}
+var gridFormat *gridFormatting = newGridFormat(
 	"| ", " | ", " |",
 
-	&BarFormat{"+", '-', "+", "+"},
-	&BarFormat{"+", '=', "+", "+"},
-	&BarFormat{"+", '-', "+", "+"},
-	&BarFormat{"+", '-', "+", "+"},
+	&barFormat{"+", '-', "+", "+"},
+	&barFormat{"+", '=', "+", "+"},
+	&barFormat{"+", '-', "+", "+"},
+	&barFormat{"+", '-', "+", "+"},
 )
-var FancyGridFormat *GridFormatting = NewGridFormat(
+var fancyGridFormat *gridFormatting = newGridFormat(
 	"\u2502 ", " \u2502 ", " \u2502",
 
-	&BarFormat{"\u2552", '\u2550', "\u2564", "\u2555"},
-	&BarFormat{"\u255e", '\u2550', "\u256a", "\u2561"},
-	&BarFormat{"\u251c", '\u2500', "\u253c", "\u2524"},
-	&BarFormat{"\u2558", '\u2550', "\u2567", "\u255b"},
+	&barFormat{"\u2552", '\u2550', "\u2564", "\u2555"},
+	&barFormat{"\u255e", '\u2550', "\u256a", "\u2561"},
+	&barFormat{"\u251c", '\u2500', "\u253c", "\u2524"},
+	&barFormat{"\u2558", '\u2550', "\u2567", "\u255b"},
 )

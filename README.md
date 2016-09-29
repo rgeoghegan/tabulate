@@ -7,6 +7,10 @@ Should be as simple as
 
     go get github.com/rgeoghegan/tabulate
 
+## Usage
+
+Check the godocs, which can be found in `tabulate.go`.
+
 ## Run tests
 
 Do:

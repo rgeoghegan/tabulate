@@ -98,7 +98,7 @@ func TestSimpleFormat(t *testing.T) {
 
 func TestSimpleFormatCustomHeaders(t *testing.T) {
 	layout := &Layout{
-		Format:  SimpleFormat,
+		Format:  simpleFormat,
 		Headers: []string{"produce", "stuff"},
 	}
 
