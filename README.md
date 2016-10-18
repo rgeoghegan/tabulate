@@ -1,5 +1,6 @@
 # tabulate
-Golang library to print data as tables
+Golang library to print data as tables, a port of the
+[tabulate python library](https://pypi.python.org/pypi/tabulate/).
 
 ## Installation
 
@@ -15,4 +16,4 @@ Check the godocs, which can be found in `tabulate.go`.
 
 Do:
 
-    rake test
+    go test github.com/rgeoghegan/tabulate 

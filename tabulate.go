@@ -18,18 +18,25 @@
 //
 //     func main() {
 //         table := []*Row{
-//             &Row{"Alpha", 1},
-//             &Row{"Bravo", 2},
+//             &Row{"alpha", 1},
+//             &Row{"bravo", 2},
 //         }
-//         asText, _ := tabulate.Tabulate(table, &Layout{Format:tabulate.SimpleFormat})
+//         asText, _ := tabulate.Tabulate(table, &tabulate.Layout{Format:tabulate.SimpleFormat})
 //         fmt.Print(asText)
 //     }
+//
+// Which will print out the following:
+//
+//      name count
+//     ----- -----
+//     alpha     1
+//     bravo     2
 //
 // You can also provide a slice of slice of strings:
 //
 //     table := [][]string{
-//         []string{"Alpha", "1"},
-//         []string{"Bravo", "2"},
+//         []string{"alpha", "1"},
+//         []string{"bravo", "2"},
 //     }
 //     layout := &Layout{Headers:[]string{"name", "count"}, Format:tabulate.SimpleFormat}
 //     asText, err := tabulate.Tabulate(table, layout)
