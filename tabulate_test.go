@@ -154,6 +154,23 @@ func TestFancyGridFormat(t *testing.T) {
 	}
 }
 
+func TestPipeFormat(t *testing.T) {
+	table, err := Tabulate(testData, &Layout{Format: PipeFormat})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expecting := ("" +
+		"  name " + "| amount\n" +
+		"------ " + "| ------\n" +
+		" Apple " + "|     15\n" +
+		"Orange " + "|      1\n")
+
+	if table != expecting {
+		t.Fatalf("Expecting %q, got %q", expecting, table)
+	}
+}
+
 type FullName struct {
 	first string
 	last  string

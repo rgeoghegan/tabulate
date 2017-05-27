@@ -197,6 +197,14 @@ var PlainFormat spacerFormatting = " "
 //    Orange      1
 var SimpleFormat *headerFormatting = &headerFormatting{" ", '-', nil}
 
+// PipeFormat is very similar to PlainLayout except it has a bar under
+// the headers, and a pipe (|) between each column:
+//      name | amount
+//    ------ | ------
+//     Apple |     15
+//    Orange |      1
+var PipeFormat *headerFormatting = &headerFormatting{" | ", '-', nil}
+
 // GridFormat surrounds every cell with a grid:
 //    +--------+--------+
 //    |   name | amount |

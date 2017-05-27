@@ -12,7 +12,7 @@ func main() {
 	}
 
 	fmt.Println("Simple Format:")
-	layout := tabulate.SimpleLayout()
+	layout := &tabulate.Layout{Format: tabulate.SimpleFormat}
 	layout.Headers = []string{"A", "B"}
 	tableText, err := tabulate.Tabulate(table, layout)
 	if err != nil {

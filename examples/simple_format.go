@@ -17,7 +17,7 @@ func main() {
 	blahs = append(blahs, &Blah{"Orange", 1})
 
 	fmt.Println("No Format:")
-	layout := tabulate.NoFormatLayout()
+	layout := &tabulate.Layout{Format: tabulate.NoFormat}
 	table, err := tabulate.Tabulate(blahs, layout)
 	if err != nil {
 		panic(err)
@@ -33,7 +33,7 @@ func main() {
 	fmt.Println(table)
 
 	fmt.Println("Plain Format:")
-	layout = tabulate.PlainLayout()
+	layout = &tabulate.Layout{Format: tabulate.PlainFormat}
 	table, err = tabulate.Tabulate(blahs, layout)
 	if err != nil {
 		panic(err)
@@ -49,21 +49,24 @@ func main() {
 	fmt.Println(table)
 
 	fmt.Println("Simple Format:")
-	table, err = tabulate.Tabulate(blahs, tabulate.SimpleLayout())
+	layout = &tabulate.Layout{Format: tabulate.SimpleFormat}
+	table, err = tabulate.Tabulate(blahs, layout)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(table)
 
 	fmt.Println("Grid Format:")
-	table, err = tabulate.Tabulate(blahs, tabulate.GridLayout())
+	layout = &tabulate.Layout{Format: tabulate.GridFormat}
+	table, err = tabulate.Tabulate(blahs, layout)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(table)
 
 	fmt.Println("Fancy Grid Format:")
-	table, err = tabulate.Tabulate(blahs, tabulate.FancyGridLayout())
+	layout = &tabulate.Layout{Format: tabulate.FancyGridFormat}
+	table, err = tabulate.Tabulate(blahs, layout)
 	if err != nil {
 		panic(err)
 	}

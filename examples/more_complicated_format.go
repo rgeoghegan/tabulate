@@ -34,7 +34,9 @@ func main() {
 	blahs = append(blahs, &Blah{&Bloom{"Jolene", "Lee"}, 234, "Guyene", true,
 		11.0000000000001})
 
-	table, err := tabulate.Tabulate(blahs, tabulate.SimpleLayout())
+	table, err := tabulate.Tabulate(
+		blahs, &tabulate.Layout{Format: tabulate.PipeFormat},
+	)
 	if err != nil {
 		panic(err)
 	}
