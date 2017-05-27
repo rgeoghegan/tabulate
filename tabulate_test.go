@@ -238,3 +238,20 @@ func TestTabulateStringMatrix(t *testing.T) {
 		"   1" + "     2\n")
 	assert.Equal(t, expecting, table)
 }
+
+func TestTabulateNoHeader(t *testing.T) {
+	records := [][]string{
+		[]string{"here", "there"},
+		[]string{"1", "2"},
+	}
+
+	layout := &Layout{Format: SimpleFormat, HideHeaders: true}
+
+	table, err := Tabulate(records, layout)
+	require.Nil(t, err)
+
+	expecting := ("" +
+		"here" + " there\n" +
+		"   1" + "     2\n")
+	assert.Equal(t, expecting, table)
+}

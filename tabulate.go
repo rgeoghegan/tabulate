@@ -21,7 +21,9 @@
 //             &Row{"alpha", 1},
 //             &Row{"bravo", 2},
 //         }
-//         asText, _ := tabulate.Tabulate(table, &tabulate.Layout{Format:tabulate.SimpleFormat})
+//         asText, _ := tabulate.Tabulate(
+//		      table, &tabulate.Layout{Format:tabulate.SimpleFormat},
+//		   )
 //         fmt.Print(asText)
 //     }
 //
@@ -76,18 +78,21 @@ func getRowType(table interface{}) (reflect.Type, error) {
 	return nil, fmt.Errorf("Must pass in slice of struct pointers.")
 }
 
+type column struct {
+	header string
+	column []string
+}
+
 func fetchStructColumn(rowType reflect.Type, table reflect.Value, colDepth int,
-	customHeaders []string, index int) ([]string, error) {
-	var output []string
-	var headerName string
+	customHeaders []string, index int) (*column, error) {
+	var col = &column{}
 
 	header := rowType.Field(index)
 	if customHeaders == nil {
-		headerName = header.Name
+		col.header = header.Name
 	} else {
-		headerName = customHeaders[index]
+		col.header = customHeaders[index]
 	}
-	output = append(output, headerName)
 	caster, err := guessCaster(header.Type)
 
 	if err != nil {
@@ -96,21 +101,23 @@ func fetchStructColumn(rowType reflect.Type, table reflect.Value, colDepth int,
 
 	for i := 0; i < colDepth; i++ {
 		row := table.Index(i).Elem()
-		output = append(output, caster(row.Field(index)))
+		col.column = append(col.column, caster(row.Field(index)))
 	}
 	if header.Type.Kind() == reflect.Float32 ||
 		header.Type.Kind() == reflect.Float64 {
-		alignFloats(output[1:len(output)])
+		alignFloats(col.column)
 	}
-	return output, nil
+	return col, nil
 }
 
 func fetchMatrixColumn(rowType reflect.Type, table reflect.Value, colDepth int,
-	customHeaders []string, index int) ([]string, error) {
+	customHeaders []string, hideHeaders bool, index int) (*column, error) {
 
-	var output []string
+	col := &column{}
 
-	output = append(output, customHeaders[index])
+	if !hideHeaders {
+		col.header = customHeaders[index]
+	}
 	cellType := rowType.Elem()
 	caster, err := guessCaster(cellType)
 
@@ -120,26 +127,28 @@ func fetchMatrixColumn(rowType reflect.Type, table reflect.Value, colDepth int,
 
 	for i := 0; i < colDepth; i++ {
 		cell := table.Index(i).Index(index)
-		output = append(output, caster(cell))
+		col.column = append(col.column, caster(cell))
 	}
 	if cellType.Kind() == reflect.Float32 || cellType.Kind() == reflect.Float64 {
-		alignFloats(output[1:len(output)])
+		alignFloats(col.column)
 	}
-	return output, nil
+	return col, nil
 }
 
-type table [][]string
+type table []*column
 
 func (t table) columnWidths(countHeaders bool) []int {
 	var colWidths []int
 
 	for _, col := range t {
 		colLength := 0
-		for rowI, cell := range col {
-			if (countHeaders) || (rowI > 0) {
-				if len(cell) > colLength {
-					colLength = len(cell)
-				}
+		if countHeaders {
+			colLength = len(col.header)
+		}
+
+		for _, cell := range col.column {
+			if len(cell) > colLength {
+				colLength = len(cell)
 			}
 		}
 		colWidths = append(colWidths, colLength)
@@ -149,13 +158,11 @@ func (t table) columnWidths(countHeaders bool) []int {
 
 func (t table) align(widths []int, showHeaders bool) {
 	for colI, col := range t {
-		start := 0
-		if !showHeaders {
-			// Skip first row because it contains the headers
-			start = 1
+		if showHeaders {
+			col.header = fmt.Sprintf("%[1]*[2]s", widths[colI], col.header)
 		}
-		for i := start; i < len(col); i++ {
-			col[i] = fmt.Sprintf("%[1]*[2]s", widths[colI], col[i])
+		for i := 0; i < len(col.column); i++ {
+			col.column[i] = fmt.Sprintf("%[1]*[2]s", widths[colI], col.column[i])
 		}
 	}
 }
@@ -174,11 +181,7 @@ func (t table) draw(format TableFormatterInterface, showHeaders bool) string {
 		return rows
 	}
 
-	joinCols := func(rowI int) string {
-		var parts []string
-		for _, col := range t {
-			parts = append(parts, col[rowI])
-		}
+	joinTokens := func(parts []string) string {
 		return format.LinePrefix() +
 			strings.Join(parts, format.Spacer()) +
 			format.LinePostfix()
@@ -186,14 +189,22 @@ func (t table) draw(format TableFormatterInterface, showHeaders bool) string {
 
 	output = appendRow(output, format.AboveTable())
 	if showHeaders {
-		output = append(output, joinCols(0))
+		parts := make([]string, len(t))
+		for i, col := range t {
+			parts[i] = col.header
+		}
+		output = append(output, joinTokens(parts))
 		output = appendRow(output, format.BelowHeader())
 	}
 
-	for rowI := 1; rowI < len(t[0]); rowI++ {
-		output = appendRow(output, joinCols(rowI))
+	for rowI := 0; rowI < len(t[0].column); rowI++ {
+		parts := make([]string, len(t))
+		for i, col := range t {
+			parts[i] = col.column[rowI]
+		}
+		output = appendRow(output, joinTokens(parts))
 
-		if rowI < len(t[0])-1 {
+		if rowI < len(t[0].column)-1 {
 			output = appendRow(output, format.BetweenRow(rowI))
 		}
 	}
@@ -219,18 +230,29 @@ func buildTable(data interface{}, layout *Layout) (table, error) {
 	case reflect.Struct:
 		isStruct = true
 		colCount = rowType.NumField()
+
 	case reflect.Slice:
-		if layout.Headers == nil {
-			return nil, fmt.Errorf("Must provide headers in layout with slice of slices.")
-		}
 		isStruct = false
-		colCount = len(layout.Headers)
+		if layout.HideHeaders {
+			// Take the length of the first row as the tables width
+			colCount = tableV.Index(0).Len()
+		} else {
+			if layout.Headers == nil {
+				return nil, fmt.Errorf(
+					"Must provide headers in layout with slice of slices.",
+				)
+			}
+			colCount = len(layout.Headers)
+		}
+
 	default:
-		return nil, fmt.Errorf("Inputted data must be a slice of slices or a slice of structs.")
+		return nil, fmt.Errorf(
+			"Inputted data must be a slice of slices or a slice of structs.",
+		)
 	}
 
 	for col := 0; col < colCount; col++ {
-		var rows []string
+		var rows *column
 		var err error
 
 		if isStruct {
@@ -239,7 +261,8 @@ func buildTable(data interface{}, layout *Layout) (table, error) {
 			)
 		} else {
 			rows, err = fetchMatrixColumn(
-				rowType, tableV, tableLength, layout.Headers, col,
+				rowType, tableV, tableLength, layout.Headers,
+				layout.HideHeaders, col,
 			)
 		}
 
