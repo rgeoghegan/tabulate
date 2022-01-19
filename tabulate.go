@@ -314,7 +314,8 @@ func writePadding(combined *bytes.Buffer, length int, padding string) {
 // ╞═══════════╪═══════════╪═══════════╡ ╞═══════════╪═══════════╪═══════════╡
 // │ A value 1 │ B value 1 │ C value 1 │ │ A value 2 │ B value 2 │ C value 2 │
 // ╘═══════════╧═══════════╧═══════════╛ ╘═══════════╧═══════════╧═══════════╛
-func CombineHorizontal(left string, right string, padding string) string {
+func CombineHorizontal(left string, right string) string {
+	const padding = " "
 	var combined bytes.Buffer
 	leftSplit := strings.Split(left, "\n")
 	rightSplit := strings.Split(right, "\n")

@@ -270,7 +270,7 @@ func TestPlacementHorizontal(t *testing.T) {
 │ Orange │      1 │ │ Orange │      1 │
 ╘════════╧════════╛ ╘════════╧════════╛
 `)
-	combined := CombineHorizontal(table1, table1, " ")
+	combined := CombineHorizontal(table1, table1)
 	assert.Equal(t, expecting, combined)
 }
 
@@ -305,7 +305,7 @@ func TestPlacementCombinedHorizontalVertical(t *testing.T) {
 		t.Fatal(err)
 	}
 	combinedVert := CombineVertical(table1, table1)
-	combined := CombineHorizontal(table1, combinedVert, " ")
+	combined := CombineHorizontal(table1, combinedVert)
 	expecting := (`╒════════╤════════╕ ╒════════╤════════╕
 │   name │ amount │ │   name │ amount │
 ╞════════╪════════╡ ╞════════╪════════╡
@@ -330,7 +330,7 @@ func TestPlacementCombo(t *testing.T) {
 		t.Fatal(err)
 	}
 	combinedVert := CombineVertical(table1, table1)
-	combinedHori := CombineHorizontal(table1, combinedVert, " ")
+	combinedHori := CombineHorizontal(table1, combinedVert)
 	testData2 := []*MyStruct{
 		&MyStruct{"Apple", 15},
 		&MyStruct{"Orange", 1},
@@ -342,9 +342,9 @@ func TestPlacementCombo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	combinedStep1 := CombineHorizontal(combinedVert, combinedHori, " ")
+	combinedStep1 := CombineHorizontal(combinedVert, combinedHori)
 
-	combined := CombineHorizontal(table2, combinedStep1, " ")
+	combined := CombineHorizontal(table2, combinedStep1)
 	expecting := `╒═════════╤════════╕ ╒════════╤════════╕ ╒════════╤════════╕ ╒════════╤════════╕
 │    name │ amount │ │   name │ amount │ │   name │ amount │ │   name │ amount │
 ╞═════════╪════════╡ ╞════════╪════════╡ ╞════════╪════════╡ ╞════════╪════════╡
