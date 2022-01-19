@@ -322,5 +322,43 @@ func TestPlacementCombinedHorizontalVertical(t *testing.T) {
                     ╘════════╧════════╛
 `)
 	assert.Equal(t, expecting, combined)
+}
 
+func TestPlacementCombo(t *testing.T) {
+	table1, err := Tabulate(testData, &Layout{Format: FancyGridFormat})
+	if err != nil {
+		t.Fatal(err)
+	}
+	combinedVert := CombineVertical(table1, table1)
+	combinedHori := CombineHorizontal(table1, combinedVert, " ")
+	testData2 := []*MyStruct{
+		&MyStruct{"Apple", 15},
+		&MyStruct{"Orange", 1},
+		&MyStruct{"Bananas", 10},
+		&MyStruct{"Kiwis", 9999},
+	}
+	table2, err := Tabulate(testData2, &Layout{Format: FancyGridFormat})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	combinedStep1 := CombineHorizontal(combinedVert, combinedHori, " ")
+
+	combined := CombineHorizontal(table2, combinedStep1, " ")
+	expecting := `╒═════════╤════════╕ ╒════════╤════════╕ ╒════════╤════════╕ ╒════════╤════════╕
+│    name │ amount │ │   name │ amount │ │   name │ amount │ │   name │ amount │
+╞═════════╪════════╡ ╞════════╪════════╡ ╞════════╪════════╡ ╞════════╪════════╡
+│   Apple │     15 │ │  Apple │     15 │ │  Apple │     15 │ │  Apple │     15 │
+├─────────┼────────┤ ├────────┼────────┤ ├────────┼────────┤ ├────────┼────────┤
+│  Orange │      1 │ │ Orange │      1 │ │ Orange │      1 │ │ Orange │      1 │
+├─────────┼────────┤ ╘════════╧════════╛ ╘════════╧════════╛ ╘════════╧════════╛
+│ Bananas │     10 │ ╒════════╤════════╕                     ╒════════╤════════╕
+├─────────┼────────┤ │   name │ amount │                     │   name │ amount │
+│   Kiwis │   9999 │ ╞════════╪════════╡                     ╞════════╪════════╡
+╘═════════╧════════╛ │  Apple │     15 │                     │  Apple │     15 │
+                     ├────────┼────────┤                     ├────────┼────────┤
+                     │ Orange │      1 │                     │ Orange │      1 │
+                     ╘════════╧════════╛                     ╘════════╧════════╛
+`
+	assert.Equal(t, expecting, combined)
 }
