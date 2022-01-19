@@ -258,12 +258,11 @@ func TestTabulateNoHeader(t *testing.T) {
 
 func TestPlacementHorizontal(t *testing.T) {
 	table1, err := Tabulate(testData, &Layout{Format: FancyGridFormat})
-        if err != nil {
-                t.Fatal(err)
-        }
+	if err != nil {
+		t.Fatal(err)
+	}
 
-        expecting := (
-`╒════════╤════════╕ ╒════════╤════════╕
+	expecting := (`╒════════╤════════╕ ╒════════╤════════╕
 │   name │ amount │ │   name │ amount │
 ╞════════╪════════╡ ╞════════╪════════╡
 │  Apple │     15 │ │  Apple │     15 │
@@ -277,12 +276,11 @@ func TestPlacementHorizontal(t *testing.T) {
 
 func TestPlacementVertical(t *testing.T) {
 	table1, err := Tabulate(testData, &Layout{Format: FancyGridFormat})
-        if err != nil {
-                t.Fatal(err)
-        }
+	if err != nil {
+		t.Fatal(err)
+	}
 
-        expecting := (
-`╒════════╤════════╕
+	expecting := (`╒════════╤════════╕
 │   name │ amount │
 ╞════════╪════════╡
 │  Apple │     15 │

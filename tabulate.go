@@ -45,10 +45,10 @@
 package tabulate
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"strings"
-	"bytes"
 )
 
 const (
@@ -301,11 +301,10 @@ func Tabulate(data interface{}, layout *Layout) (string, error) {
 }
 
 func writePadding(combined *bytes.Buffer, length int, padding string) {
-        for i := 0; i < length; i++ {
-                combined.WriteString(padding)
-        }
+	for i := 0; i < length; i++ {
+		combined.WriteString(padding)
+	}
 }
-
 
 // CombineHorizontal place two tables next to one another
 // like:
@@ -316,29 +315,30 @@ func writePadding(combined *bytes.Buffer, length int, padding string) {
 // │ A value 1 │ B value 1 │ C value 1 │ │ A value 2 │ B value 2 │ C value 2 │
 // ╘═══════════╧═══════════╧═══════════╛ ╘═══════════╧═══════════╧═══════════╛
 func CombineHorizontal(left string, right string, padding string) string {
-        var combined bytes.Buffer
-        leftSplit := strings.Split(left, "\n")
-        rightSplit := strings.Split(right, "\n")
-        max := len(leftSplit)
-        if len(rightSplit) > max {
-                max = len(rightSplit)
-        }
-        for i := 0; i < max; i++ {
-                if i < len(leftSplit) && utf8Len(leftSplit[i]) == utf8Len(leftSplit[0]) {
-                        combined.WriteString(leftSplit[i])
-                } else if (utf8Len(rightSplit[i]) == utf8Len(rightSplit[0])){
-                        writePadding(&combined, utf8Len(leftSplit[0]), padding)
-                }
-                if i < len(rightSplit) && utf8Len(rightSplit[i]) == utf8Len(rightSplit[0]){
-                        combined.WriteString(padding)
-                        combined.WriteString(rightSplit[i])
-                }
-		if i < max -1 {
+	var combined bytes.Buffer
+	leftSplit := strings.Split(left, "\n")
+	rightSplit := strings.Split(right, "\n")
+	max := len(leftSplit)
+	if len(rightSplit) > max {
+		max = len(rightSplit)
+	}
+	for i := 0; i < max; i++ {
+		if i < len(leftSplit) && utf8Len(leftSplit[i]) == utf8Len(leftSplit[0]) {
+			combined.WriteString(leftSplit[i])
+		} else if utf8Len(rightSplit[i]) == utf8Len(rightSplit[0]) {
+			writePadding(&combined, utf8Len(leftSplit[0]), padding)
+		}
+		if i < len(rightSplit) && utf8Len(rightSplit[i]) == utf8Len(rightSplit[0]) {
+			combined.WriteString(padding)
+			combined.WriteString(rightSplit[i])
+		}
+		if i < max-1 {
 			combined.WriteString("\n")
 		}
-        }
-        return combined.String()
+	}
+	return combined.String()
 }
+
 // CombineVertical place two tables verticaly
 // like:
 //
@@ -353,28 +353,28 @@ func CombineHorizontal(left string, right string, padding string) string {
 // │ A value 2 │ B value 2 │ C value 2 │
 // ╘═══════════╧═══════════╧═══════════╛
 func CombineVertical(top string, bottom string) string {
-        var combined bytes.Buffer
-        topSplit := strings.Split(top, "\n")
-        bottomSplit := strings.Split(bottom, "\n")
-        length := utf8Len(topSplit[0])
-        if length < utf8Len(bottomSplit[0]) {
-                length = utf8Len(bottomSplit[0])
-        }
-        for i := 0; i < len(topSplit); i++ {
-                combined.WriteString(topSplit[i])
-		if i < len(topSplit) -1 {
+	var combined bytes.Buffer
+	topSplit := strings.Split(top, "\n")
+	bottomSplit := strings.Split(bottom, "\n")
+	length := utf8Len(topSplit[0])
+	if length < utf8Len(bottomSplit[0]) {
+		length = utf8Len(bottomSplit[0])
+	}
+	for i := 0; i < len(topSplit); i++ {
+		combined.WriteString(topSplit[i])
+		if i < len(topSplit)-1 {
 			writePadding(&combined, length-utf8Len(topSplit[i]), " ")
 			combined.WriteString("\n")
 		}
-        }
-        for i := 0; i < len(bottomSplit); i++ {
-                combined.WriteString(bottomSplit[i])
+	}
+	for i := 0; i < len(bottomSplit); i++ {
+		combined.WriteString(bottomSplit[i])
 		if utf8Len(bottomSplit[i]) == len(bottomSplit[0]) {
 			writePadding(&combined, length-utf8Len(bottomSplit[i]), " ")
 		}
-		if i < len(bottomSplit) -1 {
+		if i < len(bottomSplit)-1 {
 			combined.WriteString("\n")
 		}
-        }
-        return combined.String()
+	}
+	return combined.String()
 }
