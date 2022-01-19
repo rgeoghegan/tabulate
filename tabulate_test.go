@@ -331,7 +331,7 @@ func TestPlacementVerticalWithPadding(t *testing.T) {
 │ Orange │      1 │
 ╘════════╧════════╛
 aaaaaaaaaaaaaaaaaaa
-bbbbbbbbbbbbbbbbbbb
+ççççççççççççççççççç
 ╒════════╤════════╕
 │   name │ amount │
 ╞════════╪════════╡
@@ -340,7 +340,7 @@ bbbbbbbbbbbbbbbbbbb
 │ Orange │      1 │
 ╘════════╧════════╛
 `)
-	combined := CombineVertical(table1, table1, "ab")
+	combined := CombineVertical(table1, table1, "aç")
 	t.Log(combined)
 	assert.Equal(t, expecting, combined)
 }

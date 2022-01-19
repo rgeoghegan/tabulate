@@ -49,6 +49,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"golang.org/x/exp/utf8string"
 )
 
 const (
@@ -368,8 +369,9 @@ func CombineVertical(top string, bottom string, padding string) string {
 		}
 	}
 	if padding != "" {
+		paddingUtf8 := utf8string.NewString(padding)
 		for i := 0; i < utf8Len(padding); i++ {
-			writePadding(&combined, utf8Len(topSplit[0]), string(padding[i]))
+			writePadding(&combined, utf8Len(topSplit[0]), string(paddingUtf8.At(i)))
 			combined.WriteString("\n")
 		}
 	}
