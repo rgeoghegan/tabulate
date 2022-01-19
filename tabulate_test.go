@@ -296,6 +296,31 @@ func TestPlacementVertical(t *testing.T) {
 ╘════════╧════════╛
 `)
 	combined := CombineVertical(table1, table1)
-	t.Log(combined)
 	assert.Equal(t, expecting, combined)
+}
+
+func TestPlacementCombinedHorizontalVertical(t *testing.T) {
+	table1, err := Tabulate(testData, &Layout{Format: FancyGridFormat})
+	if err != nil {
+		t.Fatal(err)
+	}
+	combinedVert := CombineVertical(table1, table1)
+	combined := CombineHorizontal(table1, combinedVert, " ")
+	expecting := (`╒════════╤════════╕ ╒════════╤════════╕
+│   name │ amount │ │   name │ amount │
+╞════════╪════════╡ ╞════════╪════════╡
+│  Apple │     15 │ │  Apple │     15 │
+├────────┼────────┤ ├────────┼────────┤
+│ Orange │      1 │ │ Orange │      1 │
+╘════════╧════════╛ ╘════════╧════════╛
+                    ╒════════╤════════╕
+                    │   name │ amount │
+                    ╞════════╪════════╡
+                    │  Apple │     15 │
+                    ├────────┼────────┤
+                    │ Orange │      1 │
+                    ╘════════╧════════╛
+`)
+	assert.Equal(t, expecting, combined)
+
 }
