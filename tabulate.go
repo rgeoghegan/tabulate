@@ -306,6 +306,15 @@ func writePadding(combined *bytes.Buffer, length int, padding string) {
         }
 }
 
+
+// CombineHorizontal place two tables next to one another
+// like:
+//
+// ╒═══════════╤═══════════╤═══════════╕ ╒═══════════╤═══════════╤═══════════╕
+// │         A │         B │         C │ │         A │         B │         C │
+// ╞═══════════╪═══════════╪═══════════╡ ╞═══════════╪═══════════╪═══════════╡
+// │ A value 1 │ B value 1 │ C value 1 │ │ A value 2 │ B value 2 │ C value 2 │
+// ╘═══════════╧═══════════╧═══════════╛ ╘═══════════╧═══════════╧═══════════╛
 func CombineHorizontal(left string, right string, padding string) string {
         var combined bytes.Buffer
         leftSplit := strings.Split(left, "\n")
@@ -328,7 +337,19 @@ func CombineHorizontal(left string, right string, padding string) string {
         }
         return combined.String()
 }
-
+// CombineVertical place two tables verticaly
+// like:
+//
+// ╒═══════════╤═══════════╤═══════════╕
+// │         A │         B │         C │
+// ╞═══════════╪═══════════╪═══════════╡
+// │ A value 1 │ B value 1 │ C value 1 │
+// ╘═══════════╧═══════════╧═══════════╛
+// ╒═══════════╤═══════════╤═══════════╕
+// │         A │         B │         C │
+// ╞═══════════╪═══════════╪═══════════╡
+// │ A value 2 │ B value 2 │ C value 2 │
+// ╘═══════════╧═══════════╧═══════════╛
 func CombineVertical(top string, bottom string) string {
         var combined bytes.Buffer
         topSplit := strings.Split(top, "\n")
