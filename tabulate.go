@@ -362,13 +362,19 @@ func CombineVertical(top string, bottom string) string {
         }
         for i := 0; i < len(topSplit); i++ {
                 combined.WriteString(topSplit[i])
-                writePadding(&combined, length-utf8Len(topSplit[i]), " ")
-                combined.WriteString("\n")
+		if i < len(topSplit) -1 {
+			writePadding(&combined, length-utf8Len(topSplit[i]), " ")
+			combined.WriteString("\n")
+		}
         }
         for i := 0; i < len(bottomSplit); i++ {
                 combined.WriteString(bottomSplit[i])
-                writePadding(&combined, length-utf8Len(bottomSplit[i]), " ")
-                combined.WriteString("\n")
+		if utf8Len(bottomSplit[i]) == len(bottomSplit[0]) {
+			writePadding(&combined, length-utf8Len(bottomSplit[i]), " ")
+		}
+		if i < len(bottomSplit) -1 {
+			combined.WriteString("\n")
+		}
         }
         return combined.String()
 }
