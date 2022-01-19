@@ -255,3 +255,21 @@ func TestTabulateNoHeader(t *testing.T) {
 		"   1" + "     2\n")
 	assert.Equal(t, expecting, table)
 }
+
+func TestPlacementHorizontal(t *testing.T) {
+	table1, err := Tabulate(testData, &Layout{Format: FancyGridFormat})
+        if err != nil {
+                t.Fatal(err)
+        }
+
+        expecting := (`╒════════╤════════╕ ╒════════╤════════╕
+│   name │ amount │ │   name │ amount │
+╞════════╪════════╡ ╞════════╪════════╡
+│  Apple │     15 │ │  Apple │     15 │
+├────────┼────────┤ ├────────┼────────┤
+│ Orange │      1 │ │ Orange │      1 │
+╘════════╧════════╛ ╘════════╧════════╛
+`)
+	combined := CombineHorizontal(table1, table1, " ")
+	assert.Equal(t, expecting, combined)
+}
