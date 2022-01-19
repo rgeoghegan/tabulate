@@ -314,8 +314,7 @@ func writePadding(combined *bytes.Buffer, length int, padding string) {
 // ╞═══════════╪═══════════╪═══════════╡ ╞═══════════╪═══════════╪═══════════╡
 // │ A value 1 │ B value 1 │ C value 1 │ │ A value 2 │ B value 2 │ C value 2 │
 // ╘═══════════╧═══════════╧═══════════╛ ╘═══════════╧═══════════╧═══════════╛
-func CombineHorizontal(left string, right string) string {
-	const padding = " "
+func CombineHorizontal(left string, right string, padding string) string {
 	var combined bytes.Buffer
 	leftSplit := strings.Split(left, "\n")
 	rightSplit := strings.Split(right, "\n")
@@ -353,7 +352,7 @@ func CombineHorizontal(left string, right string) string {
 // ╞═══════════╪═══════════╪═══════════╡
 // │ A value 2 │ B value 2 │ C value 2 │
 // ╘═══════════╧═══════════╧═══════════╛
-func CombineVertical(top string, bottom string) string {
+func CombineVertical(top string, bottom string, padding string) string {
 	var combined bytes.Buffer
 	topSplit := strings.Split(top, "\n")
 	bottomSplit := strings.Split(bottom, "\n")
@@ -365,6 +364,12 @@ func CombineVertical(top string, bottom string) string {
 		combined.WriteString(topSplit[i])
 		if i < len(topSplit)-1 {
 			writePadding(&combined, length-utf8Len(topSplit[i]), " ")
+			combined.WriteString("\n")
+		}
+	}
+	if padding != "" {
+		for i := 0; i < utf8Len(padding); i++ {
+			writePadding(&combined, utf8Len(topSplit[0]), string(padding[i]))
 			combined.WriteString("\n")
 		}
 	}
