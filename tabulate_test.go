@@ -255,3 +255,156 @@ func TestTabulateNoHeader(t *testing.T) {
 		"   1" + "     2\n")
 	assert.Equal(t, expecting, table)
 }
+
+func TestPlacementHorizontal(t *testing.T) {
+	table1, err := Tabulate(testData, &Layout{Format: FancyGridFormat})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expecting := (`╒════════╤════════╕ ╒════════╤════════╕
+│   name │ amount │ │   name │ amount │
+╞════════╪════════╡ ╞════════╪════════╡
+│  Apple │     15 │ │  Apple │     15 │
+├────────┼────────┤ ├────────┼────────┤
+│ Orange │      1 │ │ Orange │      1 │
+╘════════╧════════╛ ╘════════╧════════╛
+`)
+	combined := CombineHorizontal(table1, table1, " ")
+	assert.Equal(t, expecting, combined)
+}
+
+func TestPlacementHorizontalWithPadding(t *testing.T) {
+	table1, err := Tabulate(testData, &Layout{Format: FancyGridFormat})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expecting := (`╒════════╤════════╕ab╒════════╤════════╕
+│   name │ amount │ab│   name │ amount │
+╞════════╪════════╡ab╞════════╪════════╡
+│  Apple │     15 │ab│  Apple │     15 │
+├────────┼────────┤ab├────────┼────────┤
+│ Orange │      1 │ab│ Orange │      1 │
+╘════════╧════════╛ab╘════════╧════════╛
+`)
+	combined := CombineHorizontal(table1, table1, "ab")
+	assert.Equal(t, expecting, combined)
+}
+
+func TestPlacementVertical(t *testing.T) {
+	table1, err := Tabulate(testData, &Layout{Format: FancyGridFormat})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expecting := (`╒════════╤════════╕
+│   name │ amount │
+╞════════╪════════╡
+│  Apple │     15 │
+├────────┼────────┤
+│ Orange │      1 │
+╘════════╧════════╛
+╒════════╤════════╕
+│   name │ amount │
+╞════════╪════════╡
+│  Apple │     15 │
+├────────┼────────┤
+│ Orange │      1 │
+╘════════╧════════╛
+`)
+	combined := CombineVertical(table1, table1, "")
+	assert.Equal(t, expecting, combined)
+}
+
+func TestPlacementVerticalWithPadding(t *testing.T) {
+	table1, err := Tabulate(testData, &Layout{Format: FancyGridFormat})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expecting := (`╒════════╤════════╕
+│   name │ amount │
+╞════════╪════════╡
+│  Apple │     15 │
+├────────┼────────┤
+│ Orange │      1 │
+╘════════╧════════╛
+aaaaaaaaaaaaaaaaaaa
+ççççççççççççççççççç
+╒════════╤════════╕
+│   name │ amount │
+╞════════╪════════╡
+│  Apple │     15 │
+├────────┼────────┤
+│ Orange │      1 │
+╘════════╧════════╛
+`)
+	combined := CombineVertical(table1, table1, "aç")
+	t.Log(combined)
+	assert.Equal(t, expecting, combined)
+}
+
+func TestPlacementCombinedHorizontalVertical(t *testing.T) {
+	table1, err := Tabulate(testData, &Layout{Format: FancyGridFormat})
+	if err != nil {
+		t.Fatal(err)
+	}
+	combinedVert := CombineVertical(table1, table1, "")
+	combined := CombineHorizontal(table1, combinedVert, " ")
+	expecting := (`╒════════╤════════╕ ╒════════╤════════╕
+│   name │ amount │ │   name │ amount │
+╞════════╪════════╡ ╞════════╪════════╡
+│  Apple │     15 │ │  Apple │     15 │
+├────────┼────────┤ ├────────┼────────┤
+│ Orange │      1 │ │ Orange │      1 │
+╘════════╧════════╛ ╘════════╧════════╛
+                    ╒════════╤════════╕
+                    │   name │ amount │
+                    ╞════════╪════════╡
+                    │  Apple │     15 │
+                    ├────────┼────────┤
+                    │ Orange │      1 │
+                    ╘════════╧════════╛
+`)
+	assert.Equal(t, expecting, combined)
+}
+
+func TestPlacementCombo(t *testing.T) {
+	table1, err := Tabulate(testData, &Layout{Format: FancyGridFormat})
+	if err != nil {
+		t.Fatal(err)
+	}
+	combinedVert := CombineVertical(table1, table1, "")
+	combinedHori := CombineHorizontal(table1, combinedVert, " ")
+	testData2 := []*MyStruct{
+		&MyStruct{"Apple", 15},
+		&MyStruct{"Orange", 1},
+		&MyStruct{"Bananas", 10},
+		&MyStruct{"Kiwis", 9999},
+	}
+	table2, err := Tabulate(testData2, &Layout{Format: FancyGridFormat})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	combinedStep1 := CombineHorizontal(combinedVert, combinedHori, " ")
+
+	combined := CombineHorizontal(table2, combinedStep1, " ")
+	expecting := `╒═════════╤════════╕ ╒════════╤════════╕ ╒════════╤════════╕ ╒════════╤════════╕
+│    name │ amount │ │   name │ amount │ │   name │ amount │ │   name │ amount │
+╞═════════╪════════╡ ╞════════╪════════╡ ╞════════╪════════╡ ╞════════╪════════╡
+│   Apple │     15 │ │  Apple │     15 │ │  Apple │     15 │ │  Apple │     15 │
+├─────────┼────────┤ ├────────┼────────┤ ├────────┼────────┤ ├────────┼────────┤
+│  Orange │      1 │ │ Orange │      1 │ │ Orange │      1 │ │ Orange │      1 │
+├─────────┼────────┤ ╘════════╧════════╛ ╘════════╧════════╛ ╘════════╧════════╛
+│ Bananas │     10 │ ╒════════╤════════╕                     ╒════════╤════════╕
+├─────────┼────────┤ │   name │ amount │                     │   name │ amount │
+│   Kiwis │   9999 │ ╞════════╪════════╡                     ╞════════╪════════╡
+╘═════════╧════════╛ │  Apple │     15 │                     │  Apple │     15 │
+                     ├────────┼────────┤                     ├────────┼────────┤
+                     │ Orange │      1 │                     │ Orange │      1 │
+                     ╘════════╧════════╛                     ╘════════╧════════╛
+`
+	assert.Equal(t, expecting, combined)
+}
