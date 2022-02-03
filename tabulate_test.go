@@ -370,6 +370,32 @@ func TestPlacementCombinedHorizontalVertical(t *testing.T) {
 	assert.Equal(t, expecting, combined)
 }
 
+func TestPlacementCombinedHorizontalVertical2(t *testing.T) {
+       table1, err := Tabulate(testData, &Layout{Format: FancyGridFormat})
+       if err != nil {
+               t.Fatal(err)
+       }
+       combinedVert := CombineVertical(table1, table1, "")
+       combined := CombineHorizontal(combinedVert, table1, " ")
+       expecting := (`╒════════╤════════╕ ╒════════╤════════╕
+│   name │ amount │ │   name │ amount │
+╞════════╪════════╡ ╞════════╪════════╡
+│  Apple │     15 │ │  Apple │     15 │
+├────────┼────────┤ ├────────┼────────┤
+│ Orange │      1 │ │ Orange │      1 │
+╘════════╧════════╛ ╘════════╧════════╛
+╒════════╤════════╕
+│   name │ amount │
+╞════════╪════════╡
+│  Apple │     15 │
+├────────┼────────┤
+│ Orange │      1 │
+╘════════╧════════╛
+`)
+       assert.Equal(t, expecting, combined)
+}
+
+
 func TestPlacementCombo(t *testing.T) {
 	table1, err := Tabulate(testData, &Layout{Format: FancyGridFormat})
 	if err != nil {
