@@ -271,6 +271,7 @@ func TestPlacementHorizontal(t *testing.T) {
 ╘════════╧════════╛ ╘════════╧════════╛
 `)
 	combined := CombineHorizontal(table1, table1, " ")
+
 	assert.Equal(t, expecting, combined)
 }
 
@@ -341,7 +342,6 @@ aaaaaaaaaaaaaaaaaaa
 ╘════════╧════════╛
 `)
 	combined := CombineVertical(table1, table1, "aç")
-	t.Log(combined)
 	assert.Equal(t, expecting, combined)
 }
 
@@ -384,17 +384,48 @@ func TestPlacementCombinedHorizontalVertical2(t *testing.T) {
 ├────────┼────────┤ ├────────┼────────┤
 │ Orange │      1 │ │ Orange │      1 │
 ╘════════╧════════╛ ╘════════╧════════╛
-╒════════╤════════╕
-│   name │ amount │
-╞════════╪════════╡
-│  Apple │     15 │
-├────────┼────────┤
-│ Orange │      1 │
-╘════════╧════════╛
+╒════════╤════════╕                    
+│   name │ amount │                    
+╞════════╪════════╡                    
+│  Apple │     15 │                    
+├────────┼────────┤                    
+│ Orange │      1 │                    
+╘════════╧════════╛                    
 `)
        assert.Equal(t, expecting, combined)
 }
 
+func TestPlacement(t *testing.T) {
+	table1, err := Tabulate(testData, &Layout{Format: FancyGridFormat})
+	if err != nil {
+		t.Fatal(err)
+	}
+	testData2 := []*MyStruct{
+		&MyStruct{"Apple", 15},
+		&MyStruct{"Orange", 1},
+		&MyStruct{"Bananas", 10},
+		&MyStruct{"Kiwis", 9999},
+	}
+	table2, err := Tabulate(testData2, &Layout{Format: FancyGridFormat})
+	if err != nil {
+		t.Fatal(err)
+	}
+	combined := CombineHorizontal(table2, table1, " ")
+	combined = CombineHorizontal(combined, table2, " ")
+	expecting := `╒═════════╤════════╕ ╒════════╤════════╕ ╒═════════╤════════╕
+│    name │ amount │ │   name │ amount │ │    name │ amount │
+╞═════════╪════════╡ ╞════════╪════════╡ ╞═════════╪════════╡
+│   Apple │     15 │ │  Apple │     15 │ │   Apple │     15 │
+├─────────┼────────┤ ├────────┼────────┤ ├─────────┼────────┤
+│  Orange │      1 │ │ Orange │      1 │ │  Orange │      1 │
+├─────────┼────────┤ ╘════════╧════════╛ ├─────────┼────────┤
+│ Bananas │     10 │                     │ Bananas │     10 │
+├─────────┼────────┤                     ├─────────┼────────┤
+│   Kiwis │   9999 │                     │   Kiwis │   9999 │
+╘═════════╧════════╛                     ╘═════════╧════════╛
+`
+	assert.Equal(t, expecting, combined)
+}
 
 func TestPlacementCombo(t *testing.T) {
 	table1, err := Tabulate(testData, &Layout{Format: FancyGridFormat})
