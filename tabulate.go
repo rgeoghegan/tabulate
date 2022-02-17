@@ -332,6 +332,9 @@ func CombineHorizontal(left string, right string, padding string) string {
 		if i < len(rightSplit) && utf8Len(rightSplit[i]) == utf8Len(rightSplit[0]) {
 			combined.WriteString(padding)
 			combined.WriteString(rightSplit[i])
+		} else if i < len(leftSplit) && utf8Len(leftSplit[i]) == utf8Len(leftSplit[0]) {
+			combined.WriteString(padding)
+			writePadding(&combined, utf8Len(rightSplit[0]), padding)
 		}
 		if i < max-1 {
 			combined.WriteString("\n")
